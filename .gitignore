@@ -3,3 +3,6 @@ node_modules/
 dist/
 .DS_Store
 .vscode/
+backend/.agents/
+backend/.claude/
+backend/.windsurf/
