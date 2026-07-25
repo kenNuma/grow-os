@@ -1,7 +1,9 @@
 import { useEffect, useState } from "react";
-import { getDevices } from "../device/device.api";
+import DashboardSummary from "./components/DashboardSummary";
 import DeviceList from "../device/components/DeviceList";
+import { getDevices } from "../device/device.api";
 import type { Device } from "../device/device.types";
+import "./Dashboard.css";
 
 function Dashboard() {
     const [devices, setDevices] = useState<Device[]>([]);
@@ -24,18 +26,49 @@ function Dashboard() {
         fetchDevices();
     }, []);
 
-    if (isLoading) {
-        return <p>読み込み中...</p>;
-    }
-
-    if (errorMessage) {
-        return <p>{errorMessage}</p>;
-    }
-
     return (
-        <main>
-            <h1>GrowOS Dashboard</h1>
-            <DeviceList devices={devices} />
+        <main className="dashboard">
+            <div className="dashboard__container">
+                <header className="dashboard__header">
+                    <h1 className="dashboard__title">GrowOS Dashboard</h1>
+                    <p className="dashboard__description">
+                        植物の状態をリアルタイムで監視します
+                    </p>
+                </header>
+
+                {isLoading && (
+                    <p className="dashboard__message">デバイス情報を読み込んでいます...</p>
+                )}
+
+                {errorMessage && (
+                    <p className="dashboard__message dashboard__message--error">
+                        {errorMessage}
+                    </p>
+                )}
+
+                <DashboardSummary
+                    totalDevices={devices.length}
+                    onlineDevices={
+                        devices.filter(
+                            (device) => device.status.toLowerCase() === "online"
+                        ).length
+                    }
+                />
+
+                <section className="dashboard__devices">
+                    <div className="dashboard__section-header">
+                        <div>
+                            <h2 className="dashboard__section-title">Devices</h2>
+                            <p className="dashboard__section-description">
+                                登録されているデバイスの現在状態
+                            </p>
+                        </div>
+                    </div>
+
+
+                    {!isLoading && !errorMessage && <DeviceList devices={devices} />}
+                </section>
+            </div>
         </main>
     );
 }

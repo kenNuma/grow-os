@@ -3,6 +3,7 @@ import { ApiError } from "../../../shared/api/client";
 import { getLatestTelemetry } from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 import type { Device } from "../device.types";
+import "./DeviceCard.css";
 
 type DeviceCardProps = {
     device: Device;
@@ -12,6 +13,8 @@ function DeviceCard({ device }: DeviceCardProps) {
     const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+    const isOnline = device.status.toLowerCase() === "online";
 
     useEffect(() => {
         async function fetchLatestTelemetry() {
@@ -35,64 +38,61 @@ function DeviceCard({ device }: DeviceCardProps) {
     }, [device.deviceKey]);
 
     return (
-        <article>
-            <h2>{device.name}</h2>
-
-            <dl>
+        <article className="device-card">
+            <header className="device-card__header">
                 <div>
-                    <dt>Device Key</dt>
-                    <dd>{device.deviceKey}</dd>
+                    <h2 className="device-card__name">{device.name}</h2>
+                    <p className="device-card__key">{device.deviceKey}</p>
                 </div>
 
-                <div>
-                    <dt>Status</dt>
-                    <dd>{device.status}</dd>
-                </div>
+                <span
+                    className={`device-card__status ${isOnline
+                            ? "device-card__status--online"
+                            : "device-card__status--offline"
+                        }`}
+                >
+                    {device.status}
+                </span>
+            </header>
 
-                <div>
-                    <dt>Last Seen</dt>
-                    <dd>
-                        {device.lastSeenAt
-                            ? new Date(device.lastSeenAt).toLocaleString("ja-JP")
-                            : "未接続"}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt>Temperature</dt>
-                    <dd>
+            <dl className="device-card__metrics">
+                <div className="device-card__metric">
+                    <dt className="device-card__label">温度</dt>
+                    <dd className="device-card__value">
                         {isLoading
-                            ? "読み込み中..."
+                            ? "..."
                             : telemetry
-                                ? `${telemetry.temperature} ℃`
+                                ? `${telemetry.temperature}℃`
                                 : "-"}
                     </dd>
                 </div>
 
-                <div>
-                    <dt>Humidity</dt>
-                    <dd>
+                <div className="device-card__metric">
+                    <dt className="device-card__label">湿度</dt>
+                    <dd className="device-card__value">
                         {isLoading
-                            ? "読み込み中..."
+                            ? "..."
                             : telemetry
-                                ? `${telemetry.humidity} %`
-                                : "-"}
-                    </dd>
-                </div>
-
-                <div>
-                    <dt>Recorded At</dt>
-                    <dd>
-                        {isLoading
-                            ? "読み込み中..."
-                            : telemetry
-                                ? new Date(telemetry.recordedAt).toLocaleString("ja-JP")
+                                ? `${telemetry.humidity}%`
                                 : "-"}
                     </dd>
                 </div>
             </dl>
 
-            {errorMessage && <p>{errorMessage}</p>}
+            <footer className="device-card__footer">
+                <p className="device-card__time">
+                    最終計測：
+                    {isLoading
+                        ? "読み込み中..."
+                        : telemetry
+                            ? new Date(telemetry.recordedAt).toLocaleString("ja-JP")
+                            : "データなし"}
+                </p>
+
+                {errorMessage && (
+                    <p className="device-card__error">{errorMessage}</p>
+                )}
+            </footer>
         </article>
     );
 }

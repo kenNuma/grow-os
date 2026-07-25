@@ -1,0 +1,15 @@
+.layout {
+    display: flex;
+    min-height: 100vh;
+    background: #f5f7f6;
+}
+
+.layout__content {
+    display: flex;
+    flex: 1;
+    flex-direction: column;
+}
+
+.layout__main {
+    flex: 1;
+}

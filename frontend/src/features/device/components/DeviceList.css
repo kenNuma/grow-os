@@ -1,0 +1,13 @@
+.device-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+    gap: 24px;
+}
+
+.device-list__empty {
+    padding: 24px;
+    border: 1px dashed #b9c7bd;
+    border-radius: 16px;
+    color: #647067;
+    text-align: center;
+}

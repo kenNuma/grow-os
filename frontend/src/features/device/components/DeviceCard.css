@@ -1,0 +1,90 @@
+.device-card {
+    padding: 24px;
+    border: 1px solid #dce4de;
+    border-radius: 20px;
+    background-color: #ffffff;
+    box-shadow: 0 10px 30px rgb(31 57 39 / 8%);
+}
+
+.device-card__header {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 16px;
+    margin-bottom: 24px;
+}
+
+.device-card__name {
+    margin: 0;
+    color: #17251c;
+    font-size: 1.35rem;
+}
+
+.device-card__key {
+    margin: 6px 0 0;
+    color: #78827b;
+    font-size: 0.875rem;
+}
+
+.device-card__status {
+    flex-shrink: 0;
+    padding: 6px 10px;
+    border-radius: 999px;
+    font-size: 0.75rem;
+    font-weight: 700;
+    letter-spacing: 0.04em;
+    text-transform: uppercase;
+}
+
+.device-card__status--online {
+    color: #176637;
+    background-color: #dcf4e4;
+}
+
+.device-card__status--offline {
+    color: #6b7370;
+    background-color: #edf0ee;
+}
+
+.device-card__metrics {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 16px;
+    margin: 0 0 24px;
+}
+
+.device-card__metric {
+    padding: 16px;
+    border-radius: 14px;
+    background-color: #f5f8f6;
+}
+
+.device-card__label {
+    margin: 0 0 8px;
+    color: #6f7b73;
+    font-size: 0.8rem;
+}
+
+.device-card__value {
+    margin: 0;
+    color: #203226;
+    font-size: 1.5rem;
+    font-weight: 700;
+}
+
+.device-card__footer {
+    padding-top: 16px;
+    border-top: 1px solid #edf0ee;
+}
+
+.device-card__time {
+    margin: 0;
+    color: #6f7b73;
+    font-size: 0.875rem;
+}
+
+.device-card__error {
+    margin: 16px 0 0;
+    color: #a43a3a;
+    font-size: 0.875rem;
+}
