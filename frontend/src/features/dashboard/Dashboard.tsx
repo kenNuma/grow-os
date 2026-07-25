@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getDevices } from "../device/device.api";
+import DeviceList from "../device/components/DeviceList";
 import type { Device } from "../device/device.types";
 
 function Dashboard() {
@@ -34,20 +35,7 @@ function Dashboard() {
     return (
         <main>
             <h1>GrowOS Dashboard</h1>
-
-            {devices.length === 0 ? (
-                <p>登録されているデバイスはありません。</p>
-            ) : (
-                <ul>
-                    {devices.map((device) => (
-                        <li key={device.id}>
-                            <strong>{device.name}</strong>
-                            <div>deviceKey: {device.deviceKey}</div>
-                            <div>status: {device.status}</div>
-                        </li>
-                    ))}
-                </ul>
-            )}
+            <DeviceList devices={devices} />
         </main>
     );
 }
