@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Param } from '@nestjs/common';
 import { DeviceService } from './device.service';
 
 type CreateDeviceBody = {
@@ -13,6 +13,13 @@ export class DeviceController {
     @Get()
     async findAll() {
         return this.deviceService.findAll();
+    }
+
+    @Get(':deviceKey')
+    async findByDeviceKey(
+        @Param('deviceKey') deviceKey: string,
+    ) {
+        return this.deviceService.findByDeviceKey(deviceKey);
     }
 
     @Post()

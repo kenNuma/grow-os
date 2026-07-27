@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import DashboardSummary from "./components/DashboardSummary";
-import DeviceList from "../device/components/DeviceList";
-import { getDevices } from "../device/device.api";
-import type { Device } from "../device/device.types";
+import DashboardSummary from "../components/DashboardSummary";
+import DeviceList from "../../device/components/DeviceList";
+import { getDevices } from "../../device/device.api";
+import type { Device } from "../../device/device.types";
 import "./Dashboard.css";
 
 function Dashboard() {

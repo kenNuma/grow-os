@@ -1,8 +1,11 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
+
 import { ApiError } from "../../../shared/api/client";
 import { getLatestTelemetry } from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 import type { Device } from "../device.types";
+
 import "./DeviceCard.css";
 
 type DeviceCardProps = {
@@ -38,62 +41,68 @@ function DeviceCard({ device }: DeviceCardProps) {
     }, [device.deviceKey]);
 
     return (
-        <article className="device-card">
-            <header className="device-card__header">
-                <div>
-                    <h2 className="device-card__name">{device.name}</h2>
-                    <p className="device-card__key">{device.deviceKey}</p>
-                </div>
+        <Link
+            className="device-card__link"
+            to={`/devices/${device.deviceKey}`}
+            aria-label={`${device.name}の詳細を表示`}
+        >
+            <article className="device-card">
+                <header className="device-card__header">
+                    <div>
+                        <h2 className="device-card__name">{device.name}</h2>
+                        <p className="device-card__key">{device.deviceKey}</p>
+                    </div>
 
-                <span
-                    className={`device-card__status ${isOnline
-                            ? "device-card__status--online"
-                            : "device-card__status--offline"
-                        }`}
-                >
-                    {device.status}
-                </span>
-            </header>
+                    <span
+                        className={`device-card__status ${isOnline
+                                ? "device-card__status--online"
+                                : "device-card__status--offline"
+                            }`}
+                    >
+                        {device.status}
+                    </span>
+                </header>
 
-            <dl className="device-card__metrics">
-                <div className="device-card__metric">
-                    <dt className="device-card__label">温度</dt>
-                    <dd className="device-card__value">
+                <dl className="device-card__metrics">
+                    <div className="device-card__metric">
+                        <dt className="device-card__label">温度</dt>
+                        <dd className="device-card__value">
+                            {isLoading
+                                ? "..."
+                                : telemetry
+                                    ? `${telemetry.temperature}℃`
+                                    : "-"}
+                        </dd>
+                    </div>
+
+                    <div className="device-card__metric">
+                        <dt className="device-card__label">湿度</dt>
+                        <dd className="device-card__value">
+                            {isLoading
+                                ? "..."
+                                : telemetry
+                                    ? `${telemetry.humidity}%`
+                                    : "-"}
+                        </dd>
+                    </div>
+                </dl>
+
+                <footer className="device-card__footer">
+                    <p className="device-card__time">
+                        最終計測：
                         {isLoading
-                            ? "..."
+                            ? "読み込み中..."
                             : telemetry
-                                ? `${telemetry.temperature}℃`
-                                : "-"}
-                    </dd>
-                </div>
+                                ? new Date(telemetry.recordedAt).toLocaleString("ja-JP")
+                                : "データなし"}
+                    </p>
 
-                <div className="device-card__metric">
-                    <dt className="device-card__label">湿度</dt>
-                    <dd className="device-card__value">
-                        {isLoading
-                            ? "..."
-                            : telemetry
-                                ? `${telemetry.humidity}%`
-                                : "-"}
-                    </dd>
-                </div>
-            </dl>
-
-            <footer className="device-card__footer">
-                <p className="device-card__time">
-                    最終計測：
-                    {isLoading
-                        ? "読み込み中..."
-                        : telemetry
-                            ? new Date(telemetry.recordedAt).toLocaleString("ja-JP")
-                            : "データなし"}
-                </p>
-
-                {errorMessage && (
-                    <p className="device-card__error">{errorMessage}</p>
-                )}
-            </footer>
-        </article>
+                    {errorMessage && (
+                        <p className="device-card__error">{errorMessage}</p>
+                    )}
+                </footer>
+            </article>
+        </Link>
     );
 }
 

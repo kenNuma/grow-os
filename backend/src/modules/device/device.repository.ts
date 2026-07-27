@@ -8,10 +8,18 @@ type CreateDeviceData = {
 
 @Injectable()
 export class DeviceRepository {
-    constructor(private readonly prisma: PrismaService) { }
+    constructor(private readonly prisma: PrismaService) {}
 
     async findAll() {
         return this.prisma.device.findMany();
+    }
+
+    async findByDeviceKey(deviceKey: string) {
+        return this.prisma.device.findUnique({
+            where: {
+                deviceKey,
+            },
+        });
     }
 
     async create(data: CreateDeviceData) {

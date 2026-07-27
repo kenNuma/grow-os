@@ -88,3 +88,15 @@
     color: #a43a3a;
     font-size: 0.875rem;
 }
+
+.device-card__link {
+    display: block;
+    color: inherit;
+    text-decoration: none;
+    border-radius: 16px;
+}
+
+.device-card__link:focus-visible {
+    outline: 3px solid #2563eb;
+    outline-offset: 3px;
+}

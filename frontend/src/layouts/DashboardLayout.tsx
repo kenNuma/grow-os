@@ -1,17 +1,11 @@
-import "./DashboardLayout.css";
-
-import type { ReactNode } from "react";
+import { Outlet } from "react-router-dom";
 
 import Header from "../components/Header/Header";
 import Sidebar from "../components/Sidebar/Sidebar";
 
-type DashboardLayoutProps = {
-    children: ReactNode;
-};
+import "./DashboardLayout.css";
 
-function DashboardLayout({
-    children,
-}: DashboardLayoutProps) {
+function DashboardLayout() {
     return (
         <div className="layout">
             <Sidebar />
@@ -20,7 +14,7 @@ function DashboardLayout({
                 <Header />
 
                 <main className="layout__main">
-                    {children}
+                    <Outlet />
                 </main>
             </div>
         </div>
