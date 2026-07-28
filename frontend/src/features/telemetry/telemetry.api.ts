@@ -6,3 +6,12 @@ export function getLatestTelemetry(deviceKey: string): Promise<Telemetry> {
         `/telemetry/latest/${encodeURIComponent(deviceKey)}`,
     );
 }
+
+export function getTelemetryHistory(deviceKey: string, limit = 100): Promise<Telemetry[]> {
+        const params = new URLSearchParams({
+        limit: String(limit),
+    });
+    return apiClient<Telemetry[]>(
+        `/telemetry/history/${encodeURIComponent(deviceKey)}?${params.toString()}`,
+    );
+}

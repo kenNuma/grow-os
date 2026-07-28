@@ -33,8 +33,8 @@ export class TelemetryService {
         return telemetry;
     }
 
-    async getHistory(deviceKey: string) {
-        const allTelemetry = await this.telemetryRepository.findAllByDeviceKey(deviceKey);
+    async getHistory(deviceKey: string, limit?: number) {
+        const allTelemetry = await this.telemetryRepository.findAllByDeviceKey(deviceKey, limit);
 
         if (!allTelemetry) {
             throw new NotFoundException('Telemetry not found');

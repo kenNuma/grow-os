@@ -1,4 +1,4 @@
-import { Body, Controller, Post, Get, Param } from '@nestjs/common';
+import { Body, Controller, Query, Post, Get, Param } from '@nestjs/common';
 import { TelemetryService } from './telemetry.service';
 
 type CreateTelemetryBody = {
@@ -24,7 +24,13 @@ export class TelemetryController {
     }
 
     @Get('history/:deviceKey')
-    async getHistoroy(@Param('deviceKey') deviceKey: string) {
-        return this.telemetryService.getHistory(deviceKey);
+    async getHistoroy(
+        @Param('deviceKey') deviceKey: string,
+        @Query("limit") limit?: string,
+    ) {
+        return this.telemetryService.getHistory(
+            deviceKey,
+            limit ? Number(limit) : undefined,
+        );
     }
 }

@@ -52,7 +52,7 @@ export class TelemetryRepository {
         });
     }
 
-    async findAllByDeviceKey(deviceKey: string) {
+    async findAllByDeviceKey(deviceKey: string, limit = 100) {
         const device = await this.prisma.device.findUnique({
             where: {
                 deviceKey,
@@ -70,7 +70,7 @@ export class TelemetryRepository {
             orderBy: {
                 recordedAt: 'desc',
             },
-            take: 100,
+            take: limit,
         });
     }
 }
