@@ -7,3 +7,12 @@ export interface Device {
     createdAt: string;
     updatedAt: string;
 }
+
+export interface CreateDeviceData {
+    name: string;
+    deviceKey: string;
+}
+
+export type UpdateDeviceData = {
+    name: string;
+};

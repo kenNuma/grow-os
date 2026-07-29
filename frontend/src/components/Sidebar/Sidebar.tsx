@@ -1,3 +1,5 @@
+import { NavLink } from "react-router-dom";
+
 import "./Sidebar.css";
 
 function Sidebar() {
@@ -9,12 +11,41 @@ function Sidebar() {
 
             <nav>
                 <ul className="sidebar__menu">
-                    <li className="sidebar__item sidebar__item--active">
-                        Dashboard
+                    <li>
+                        <NavLink
+                            to="/"
+                            end
+                            className={({ isActive }) =>
+                                [
+                                    "sidebar__item",
+                                    isActive
+                                        ? "sidebar__item--active"
+                                        : "",
+                                ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                            }
+                        >
+                            Dashboard
+                        </NavLink>
                     </li>
 
-                    <li className="sidebar__item">
-                        Devices
+                    <li>
+                        <NavLink
+                            to="/devices/new"
+                            className={({ isActive }) =>
+                                [
+                                    "sidebar__item",
+                                    isActive
+                                        ? "sidebar__item--active"
+                                        : "",
+                                ]
+                                    .filter(Boolean)
+                                    .join(" ")
+                            }
+                        >
+                            Devices
+                        </NavLink>
                     </li>
 
                     <li className="sidebar__item">

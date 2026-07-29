@@ -22,12 +22,26 @@ export class TelemetryRepository {
             return null;
         }
 
-        return this.prisma.telemetry.create({
-            data: {
-                deviceId: device.id,
-                temperature: data.temperature,
-                humidity: data.humidity,
-            },
+        return this.prisma.$transaction(async (transaction) => {
+            const telemetry = await transaction.telemetry.create({
+                data: {
+                    deviceId: device.id,
+                    temperature: data.temperature,
+                    humidity: data.humidity,
+                },
+            });
+
+            await transaction.device.update({
+                where: {
+                    id: device.id,
+                },
+                data: {
+                    status: "online",
+                    lastSeenAt: telemetry.recordedAt,
+                },
+            });
+
+            return telemetry;
         });
     }
 

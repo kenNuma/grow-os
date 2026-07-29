@@ -1,12 +1,16 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 
 import "./DeviceDetail.css";
 
-import { getDeviceByKey } from "../device.api";
+import { getDeviceByKey, updateDevice, deleteDevice } from "../device.api";
+import { isDeviceOnline } from "../device-status";
 import type { Device } from "../device.types";
 
-import { getLatestTelemetry, getTelemetryHistory } from "../../telemetry/telemetry.api";
+import {
+    getLatestTelemetry,
+    getTelemetryHistory,
+} from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 
 import {
@@ -20,40 +24,141 @@ import {
     YAxis,
 } from "recharts";
 
-//backend シミュレーター用のコマンド　DEVICE_KEY=ESP32-001 npm run simulate:telemetry
+// backend シミュレーター用のコマンド
+// DEVICE_KEY=ESP32-001 npm run simulate:telemetry
 function DeviceDetail() {
+    const navigate = useNavigate();
     const { deviceKey } = useParams<{ deviceKey: string }>();
 
     const [device, setDevice] = useState<Device | null>(null);
     const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
     const [telemetryHistory, setTelemetryHistory] = useState<Telemetry[]>([]);
+
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
 
-    async function fetchDevice(key: string, showLowding = false) {
+    const [isEditing, setIsEditing] = useState(false);
+    const [editingName, setEditingName] = useState("");
+    const [isSaving, setIsSaving] = useState(false);
+    const [editError, setEditError] = useState<string | null>(null);
+    const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
+    const [isDeleting, setIsDeleting] = useState(false);
+    const [deleteError, setDeleteError] = useState<string | null>(null);
+
+    async function fetchDevice(
+        key: string,
+        showLoading = false,
+    ) {
         try {
-            if(showLowding) {
+            if (showLoading) {
                 setLoading(true);
             }
+
             setError(null);
 
-            const [deviceData, telemetryData, telemetryHistory] =
-                await Promise.all([
-                    getDeviceByKey(key),
-                    getLatestTelemetry(key),
-                    getTelemetryHistory(key, 12),
-                ]);
+            const [
+                deviceData,
+                telemetryData,
+                telemetryHistoryData,
+            ] = await Promise.all([
+                getDeviceByKey(key),
+                getLatestTelemetry(key),
+                getTelemetryHistory(key, 12),
+            ]);
 
             setDevice(deviceData);
             setTelemetry(telemetryData);
-            setTelemetryHistory(telemetryHistory);
+            setTelemetryHistory(telemetryHistoryData);
         } catch (error) {
             console.error(error);
             setError("Failed to load device information.");
         } finally {
-            if (showLowding) {
+            if (showLoading) {
                 setLoading(false);
             }
+        }
+    }
+
+    function startEditing() {
+        if (!device) {
+            return;
+        }
+
+        setEditingName(device.name);
+        setEditError(null);
+        setSuccessMessage(null);
+        setIsEditing(true);
+    }
+
+    function cancelEditing() {
+        setEditingName("");
+        setEditError(null);
+        setIsEditing(false);
+    }
+
+    async function saveDeviceName() {
+        if (!deviceKey) {
+            return;
+        }
+
+        const trimmedName = editingName.trim();
+
+        if (!trimmedName) {
+            setEditError("Device name is required.");
+            return;
+        }
+
+        if (trimmedName === device?.name) {
+            cancelEditing();
+            return;
+        }
+
+        try {
+            setIsSaving(true);
+            setEditError(null);
+
+            const updatedDevice = await updateDevice({
+                name: trimmedName,
+            }, deviceKey);
+
+            setDevice(updatedDevice);
+            setEditingName("");
+            setIsEditing(false);
+            setSuccessMessage("Device name was updated.");
+        } catch (error) {
+            console.error(error);
+            setEditError("Failed to update device name.");
+        } finally {
+            setIsSaving(false);
+        }
+    }
+
+    async function handleDeleteDevice() {
+        if (!deviceKey || !device) {
+            return;
+        }
+
+        const confirmed = window.confirm(
+            `「${device.name}」を削除しますか？\n\nこの操作は取り消せません。`,
+        );
+
+        if (!confirmed) {
+            return;
+        }
+
+        try {
+            setIsDeleting(true);
+            setDeleteError(null);
+
+            await deleteDevice(deviceKey);
+
+            navigate("/");
+        } catch (error) {
+            console.error(error);
+            setDeleteError("Failed to delete device.");
+        } finally {
+            setIsDeleting(false);
         }
     }
 
@@ -63,16 +168,17 @@ function DeviceDetail() {
             setLoading(false);
             return;
         }
+
         const key = deviceKey;
 
         fetchDevice(key, true);
 
-        // const timer = setInterval(() => {
-        //     fetchDevice(key);
-        // }, 5000);
+        const timer = setInterval(() => {
+            fetchDevice(key);
+        }, 5000);
 
         return () => {
-            // clearInterval(timer);
+            clearInterval(timer);
         };
     }, [deviceKey]);
 
@@ -88,26 +194,21 @@ function DeviceDetail() {
         return <p>Device not found.</p>;
     }
 
+    const isOnline = isDeviceOnline(device.lastSeenAt);
 
     const chartData = [...telemetryHistory]
         .reverse()
         .map((item) => ({
-            recordedAt: new Date(item.recordedAt).toLocaleString(
-                "ja-JP",
-                {
-                    // month: "2-digit",
-                    // day: "2-digit",
-                    hour: "2-digit",
-                    minute: "2-digit",
-                    second: "2-digit"
-                },
-            ),
+            recordedAt: new Date(
+                item.recordedAt,
+            ).toLocaleString("ja-JP", {
+                hour: "2-digit",
+                minute: "2-digit",
+                second: "2-digit",
+            }),
             temperature: item.temperature,
             humidity: item.humidity,
         }));
-
-    console.log(telemetryHistory);
-    console.log(chartData);
 
     return (
         <section className="device-detail">
@@ -117,9 +218,91 @@ function DeviceDetail() {
                         Device Management
                     </p>
 
-                    <h1 className="device-detail__title">
-                        {device.name}
-                    </h1>
+                    {isEditing ? (
+                        <div className="device-detail__edit">
+                            <input
+                                className="device-detail__name-input"
+                                type="text"
+                                value={editingName}
+                                onChange={(event) => {
+                                    setEditingName(event.target.value);
+                                }}
+                                onKeyDown={(event) => {
+                                    if (event.key === "Enter") {
+                                        saveDeviceName();
+                                    }
+
+                                    if (event.key === "Escape") {
+                                        cancelEditing();
+                                    }
+                                }}
+                                disabled={isSaving}
+                                autoFocus
+                            />
+
+                            <div className="device-detail__edit-actions">
+                                <button
+                                    className="device-detail__button device-detail__button--primary"
+                                    type="button"
+                                    onClick={saveDeviceName}
+                                    disabled={isSaving}
+                                >
+                                    {isSaving ? "Saving..." : "Save"}
+                                </button>
+
+                                <button
+                                    className="device-detail__button device-detail__button--secondary"
+                                    type="button"
+                                    onClick={cancelEditing}
+                                    disabled={isSaving}
+                                >
+                                    Cancel
+                                </button>
+                            </div>
+
+                            {editError && (
+                                <p className="device-detail__edit-error">
+                                    {editError}
+                                </p>
+                            )}
+                        </div>
+                    ) : (
+                        <div className="device-detail__title-row">
+                            <h1 className="device-detail__title">
+                                {device.name}
+                            </h1>
+
+                            <button
+                                className="device-detail__button device-detail__button--secondary"
+                                type="button"
+                                onClick={startEditing}
+                            >
+                                Edit
+                            </button>
+
+                            <button
+                                className="device-detail__button device-detail__button--danger"
+                                type="button"
+                                onClick={handleDeleteDevice}
+                                disabled={isDeleting}
+                            >
+                                {isDeleting ? "Deleting..." : "Delete"}
+                            </button>
+
+                            {successMessage && (
+                                <p className="device-detail__success">
+                                    {successMessage}
+                                </p>
+                            )}
+
+                            {deleteError && (
+                                <p className="device-detail__delete-error">
+                                    {deleteError}
+                                </p>
+                            )}
+                        </div>
+
+                    )}
                 </div>
             </div>
 
@@ -130,6 +313,7 @@ function DeviceDetail() {
                             <p className="device-detail__panel-eyebrow">
                                 Device Information
                             </p>
+
                             <h2 className="device-detail__panel-title">
                                 Basic Information
                             </h2>
@@ -153,7 +337,11 @@ function DeviceDetail() {
                             </span>
 
                             <span className="device-detail__value">
-                                {device.lastSeenAt ?? "No data"}
+                                {device.lastSeenAt
+                                    ? new Date(
+                                        device.lastSeenAt,
+                                    ).toLocaleString("ja-JP")
+                                    : "No data"}
                             </span>
                         </div>
                     </div>
@@ -165,20 +353,24 @@ function DeviceDetail() {
                             <p className="device-detail__panel-eyebrow">
                                 Connection
                             </p>
+
                             <h2 className="device-detail__panel-title">
                                 Device Status
                             </h2>
                         </div>
 
                         <span
-                            className={`device-detail__status device-detail__status--${device.status}`}
+                            className={`device-detail__status ${isOnline
+                                ? "device-detail__status--online"
+                                : "device-detail__status--offline"
+                                }`}
                         >
-                            {device.status}
+                            {isOnline ? "online" : "offline"}
                         </span>
                     </div>
 
                     <p className="device-detail__description">
-                        {device.status === "online"
+                        {isOnline
                             ? "This device is currently connected and available."
                             : "This device is currently disconnected."}
                     </p>
@@ -237,6 +429,7 @@ function DeviceDetail() {
                         </div>
                     </div>
                 </article>
+
                 <article className="device-detail__panel device-detail__panel--wide">
                     <div className="device-detail__panel-header">
                         <div>
@@ -275,24 +468,42 @@ function DeviceDetail() {
 
                                     <YAxis
                                         yAxisId="temperature"
-                                        domain={["dataMin - 1", "dataMax + 1"]}
-                                        tickFormatter={(value) => `${value}°`}
+                                        domain={[
+                                            "dataMin - 1",
+                                            "dataMax + 1",
+                                        ]}
+                                        tickFormatter={(value) =>
+                                            `${value}°`
+                                        }
                                     />
 
                                     <YAxis
                                         yAxisId="humidity"
                                         orientation="right"
-                                        domain={["dataMin - 5", "dataMax + 5"]}
-                                        tickFormatter={(value) => `${value}%`}
+                                        domain={[
+                                            "dataMin - 5",
+                                            "dataMax + 5",
+                                        ]}
+                                        tickFormatter={(value) =>
+                                            `${value}%`
+                                        }
                                     />
 
                                     <Tooltip
                                         formatter={(value, name) => {
-                                            if (name === "Temperature") {
-                                                return [`${value} °C`, name];
+                                            if (
+                                                name === "Temperature"
+                                            ) {
+                                                return [
+                                                    `${value} °C`,
+                                                    name,
+                                                ];
                                             }
 
-                                            return [`${value} %`, name];
+                                            return [
+                                                `${value} %`,
+                                                name,
+                                            ];
                                         }}
                                     />
 

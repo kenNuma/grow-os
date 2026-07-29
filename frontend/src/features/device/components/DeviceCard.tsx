@@ -1,44 +1,37 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 
-import { ApiError } from "../../../shared/api/client";
-import { getLatestTelemetry } from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 import type { Device } from "../device.types";
+import { isDeviceOnline } from "../device-status";
 
 import "./DeviceCard.css";
 
 type DeviceCardProps = {
     device: Device;
+    telemetry: Telemetry | null;
 };
 
-function DeviceCard({ device }: DeviceCardProps) {
-    const [telemetry, setTelemetry] = useState<Telemetry | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
-    const [errorMessage, setErrorMessage] = useState<string | null>(null);
+function DeviceCard({
+    device,
+    telemetry,
+}: DeviceCardProps) {
+    const [currentTime, setCurrentTime] = useState(Date.now());
 
-    const isOnline = device.status.toLowerCase() === "online";
+    const isOnline = isDeviceOnline(
+        device.lastSeenAt,
+        currentTime,
+    );
 
     useEffect(() => {
-        async function fetchLatestTelemetry() {
-            try {
-                const data = await getLatestTelemetry(device.deviceKey);
-                setTelemetry(data);
-            } catch (error) {
-                if (error instanceof ApiError && error.status === 404) {
-                    setErrorMessage("Telemetryデータがありません。");
-                    return;
-                }
+        const timer = window.setInterval(() => {
+            setCurrentTime(Date.now());
+        }, 5000);
 
-                console.error(error);
-                setErrorMessage("Telemetryの取得に失敗しました。");
-            } finally {
-                setIsLoading(false);
-            }
-        }
-
-        fetchLatestTelemetry();
-    }, [device.deviceKey]);
+        return () => {
+            window.clearInterval(timer);
+        };
+    }, []);
 
     return (
         <Link
@@ -49,8 +42,13 @@ function DeviceCard({ device }: DeviceCardProps) {
             <article className="device-card">
                 <header className="device-card__header">
                     <div>
-                        <h2 className="device-card__name">{device.name}</h2>
-                        <p className="device-card__key">{device.deviceKey}</p>
+                        <h2 className="device-card__name">
+                            {device.name}
+                        </h2>
+
+                        <p className="device-card__key">
+                            {device.deviceKey}
+                        </p>
                     </div>
 
                     <span
@@ -59,30 +57,32 @@ function DeviceCard({ device }: DeviceCardProps) {
                                 : "device-card__status--offline"
                             }`}
                     >
-                        {device.status}
+                        {isOnline ? "online" : "offline"}
                     </span>
                 </header>
 
                 <dl className="device-card__metrics">
                     <div className="device-card__metric">
-                        <dt className="device-card__label">温度</dt>
+                        <dt className="device-card__label">
+                            温度
+                        </dt>
+
                         <dd className="device-card__value">
-                            {isLoading
-                                ? "..."
-                                : telemetry
-                                    ? `${telemetry.temperature}℃`
-                                    : "-"}
+                            {telemetry
+                                ? `${telemetry.temperature}℃`
+                                : "-"}
                         </dd>
                     </div>
 
                     <div className="device-card__metric">
-                        <dt className="device-card__label">湿度</dt>
+                        <dt className="device-card__label">
+                            湿度
+                        </dt>
+
                         <dd className="device-card__value">
-                            {isLoading
-                                ? "..."
-                                : telemetry
-                                    ? `${telemetry.humidity}%`
-                                    : "-"}
+                            {telemetry
+                                ? `${telemetry.humidity}%`
+                                : "-"}
                         </dd>
                     </div>
                 </dl>
@@ -90,16 +90,12 @@ function DeviceCard({ device }: DeviceCardProps) {
                 <footer className="device-card__footer">
                     <p className="device-card__time">
                         最終計測：
-                        {isLoading
-                            ? "読み込み中..."
-                            : telemetry
-                                ? new Date(telemetry.recordedAt).toLocaleString("ja-JP")
-                                : "データなし"}
+                        {telemetry
+                            ? new Date(
+                                telemetry.recordedAt,
+                            ).toLocaleString("ja-JP")
+                            : "データなし"}
                     </p>
-
-                    {errorMessage && (
-                        <p className="device-card__error">{errorMessage}</p>
-                    )}
                 </footer>
             </article>
         </Link>

@@ -6,9 +6,13 @@ type CreateDeviceData = {
     deviceKey: string;
 };
 
+type UpdateDeviceData = {
+    name: string;
+};
+
 @Injectable()
 export class DeviceRepository {
-    constructor(private readonly prisma: PrismaService) {}
+    constructor(private readonly prisma: PrismaService) { }
 
     async findAll() {
         return this.prisma.device.findMany();
@@ -25,6 +29,25 @@ export class DeviceRepository {
     async create(data: CreateDeviceData) {
         return this.prisma.device.create({
             data,
+        });
+    }
+
+    async updateByDeviceKey(deviceKey: string, data: UpdateDeviceData) {
+        return this.prisma.device.update({
+            where: {
+                deviceKey,
+            },
+            data: {
+                name: data.name,
+            },
+        });
+    }
+
+    async deleteByDeviceKey(deviceKey: string) {
+        return this.prisma.device.delete({
+            where: {
+                deviceKey,
+            },
         });
     }
 }

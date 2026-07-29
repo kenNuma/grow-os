@@ -1,0 +1,53 @@
+.device-register {
+    max-width: 520px;
+    margin: 0 auto;
+}
+
+.device-register h1 {
+    margin-bottom: 24px;
+}
+
+.device-register form {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.device-register label {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+    font-weight: 600;
+}
+
+.device-register input {
+    padding: 12px;
+    border: 1px solid #cbd5e1;
+    border-radius: 8px;
+    font-size: 16px;
+}
+
+.device-register button {
+    padding: 12px;
+    border: none;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 16px;
+}
+
+.device-register__error {
+    color: #dc2626;
+    font-size: 14px;
+}
+
+.device-register__counter {
+    margin: -8px 0 0;
+    color: #64748b;
+    font-size: 12px;
+    text-align: right;
+}
+
+.device-register button:disabled {
+    cursor: not-allowed;
+    opacity: 0.5;
+}
