@@ -68,6 +68,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
                     deviceKey: telemetry.deviceKey,
                     temperature: telemetry.temperature,
                     humidity: telemetry.humidity,
+                    pressure: telemetry.pressure,
                 });
 
                 this.logger.log('Telemetry saved');

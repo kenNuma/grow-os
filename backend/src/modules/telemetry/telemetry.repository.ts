@@ -5,6 +5,7 @@ type CreateTelemetryData = {
     deviceKey: string;
     temperature: number;
     humidity: number;
+    pressure: number;
 };
 
 @Injectable()
@@ -28,6 +29,7 @@ export class TelemetryRepository {
                     deviceId: device.id,
                     temperature: data.temperature,
                     humidity: data.humidity,
+                    pressure: data.pressure,
                 },
             });
 

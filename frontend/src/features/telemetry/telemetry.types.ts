@@ -3,5 +3,6 @@ export interface Telemetry {
     deviceId: string;
     temperature: number;
     humidity: number;
+    pressure: number | null;
     recordedAt: string;
 }

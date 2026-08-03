@@ -53,8 +53,8 @@ function DeviceCard({
 
                     <span
                         className={`device-card__status ${isOnline
-                                ? "device-card__status--online"
-                                : "device-card__status--offline"
+                            ? "device-card__status--online"
+                            : "device-card__status--offline"
                             }`}
                     >
                         {isOnline ? "online" : "offline"}
@@ -82,6 +82,18 @@ function DeviceCard({
                         <dd className="device-card__value">
                             {telemetry
                                 ? `${telemetry.humidity}%`
+                                : "-"}
+                        </dd>
+                    </div>
+
+                    <div className="device-card__metric">
+                        <dt className="device-card__label">
+                            気圧
+                        </dt>
+
+                        <dd className="device-card__value">
+                            {telemetry?.pressure != null
+                                ? `${telemetry.pressure.toFixed(1)} hPa`
                                 : "-"}
                         </dd>
                     </div>

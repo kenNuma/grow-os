@@ -32,6 +32,7 @@ model Telemetry {
   deviceId    String
   temperature Float
   humidity    Float
+  pressure    Float?
   recordedAt  DateTime @default(now())
 
   device Device @relation(fields: [deviceId], references: [id], onDelete: Cascade)

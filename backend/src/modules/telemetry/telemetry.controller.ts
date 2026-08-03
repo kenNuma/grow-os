@@ -5,6 +5,7 @@ type CreateTelemetryBody = {
     deviceKey: string;
     temperature: number;
     humidity: number;
+    pressure: number;
 };
 
 @Controller('telemetry')

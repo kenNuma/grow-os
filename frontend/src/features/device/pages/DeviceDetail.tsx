@@ -416,6 +416,18 @@ function DeviceDetail() {
 
                         <div className="device-detail__row">
                             <span className="device-detail__label">
+                                Pressure
+                            </span>
+
+                            <span className="device-detail__value">
+                                {telemetry?.pressure != null
+                                    ? `${telemetry.pressure.toFixed(1)} hPa`
+                                    : "No data"}
+                            </span>
+                        </div>
+
+                        <div className="device-detail__row">
+                            <span className="device-detail__label">
                                 Recorded At
                             </span>
 
