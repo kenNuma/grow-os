@@ -5,6 +5,12 @@ import type { Telemetry } from "../../telemetry/telemetry.types";
 import type { Device } from "../device.types";
 import { isDeviceOnline } from "../device-status";
 
+import { calculateVPD } from "../../../shared/calculations/calculateVPD";
+import { getHumidityStatus } from "../../../shared/calculations/getHumidityStatus";
+import { getOverallEnvironmentStatus } from "../../../shared/calculations/getOverallEnvironmentStatus";
+import { getTemperatureStatus } from "../../../shared/calculations/getTemperatureStatus";
+import { getVPDStatus } from "../../../shared/calculations/getVPDStatus";
+
 import "./DeviceCard.css";
 
 type DeviceCardProps = {
@@ -22,6 +28,18 @@ function DeviceCard({
         device.lastSeenAt,
         currentTime,
     );
+
+    const overallStatus = telemetry
+        ? getOverallEnvironmentStatus([
+            getTemperatureStatus(telemetry.temperature),
+            getHumidityStatus(telemetry.humidity),
+            getVPDStatus(
+                calculateVPD(
+                    telemetry.temperature,
+                    telemetry.humidity,
+                ),
+            ),
+        ]) : null;
 
     useEffect(() => {
         const timer = window.setInterval(() => {
@@ -51,14 +69,24 @@ function DeviceCard({
                         </p>
                     </div>
 
-                    <span
-                        className={`device-card__status ${isOnline
-                            ? "device-card__status--online"
-                            : "device-card__status--offline"
-                            }`}
-                    >
-                        {isOnline ? "online" : "offline"}
-                    </span>
+                    <div className="device-card__statuses">
+                        <span
+                            className={`device-card__status ${isOnline
+                                    ? "device-card__status--online"
+                                    : "device-card__status--offline"
+                                }`}
+                        >
+                            {isOnline ? "online" : "offline"}
+                        </span>
+
+                        {overallStatus && (
+                            <span
+                                className={`device-card__environment-status device-card__environment-status--${overallStatus.variant}`}
+                            >
+                                {overallStatus.label}
+                            </span>
+                        )}
+                    </div>
                 </header>
 
                 <dl className="device-card__metrics">
@@ -68,9 +96,19 @@ function DeviceCard({
                         </dt>
 
                         <dd className="device-card__value">
-                            {telemetry
-                                ? `${telemetry.temperature}℃`
-                                : "-"}
+                            {telemetry ? (
+                                <>
+                                    <span className="device-card__number">
+                                        {telemetry.temperature}
+                                    </span>
+
+                                    <span className="device-card__unit">
+                                        ℃
+                                    </span>
+                                </>
+                            ) : (
+                                "-"
+                            )}
                         </dd>
                     </div>
 
@@ -80,9 +118,19 @@ function DeviceCard({
                         </dt>
 
                         <dd className="device-card__value">
-                            {telemetry
-                                ? `${telemetry.humidity}%`
-                                : "-"}
+                            {telemetry ? (
+                                <>
+                                    <span className="device-card__number">
+                                        {telemetry.humidity}
+                                    </span>
+
+                                    <span className="device-card__unit">
+                                        %
+                                    </span>
+                                </>
+                            ) : (
+                                "-"
+                            )}
                         </dd>
                     </div>
 
@@ -92,9 +140,19 @@ function DeviceCard({
                         </dt>
 
                         <dd className="device-card__value">
-                            {telemetry?.pressure != null
-                                ? `${telemetry.pressure.toFixed(1)} hPa`
-                                : "-"}
+                            {telemetry?.pressure != null ? (
+                                <>
+                                    <span className="device-card__number">
+                                        {telemetry.pressure.toFixed(1)}
+                                    </span>
+
+                                    <span className="device-card__unit">
+                                        hPa
+                                    </span>
+                                </>
+                            ) : (
+                                "-"
+                            )}
                         </dd>
                     </div>
                 </dl>

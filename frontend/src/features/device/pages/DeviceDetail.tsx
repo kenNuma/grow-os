@@ -13,6 +13,7 @@ import {
 } from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 
+import EnvironmentAlertList from "../components/EnvironmentAlertList";
 import { calculateVPD } from "../../../shared/calculations/calculateVPD";
 import { getVPDStatus } from "../../../shared/calculations/getVPDStatus";
 
@@ -220,7 +221,6 @@ function DeviceDetail() {
                 telemetry.humidity,
             )
             : null;
-
     const vpdStatus =
         vpd !== null
             ? getVPDStatus(vpd)
@@ -480,37 +480,7 @@ function DeviceDetail() {
                     </div>
                 </article>
 
-                {vpdStatus?.title && (
-                    <article className={`device-detail__panel device-detail__alert-panel device-detail__alert-panel--${vpdStatus.variant}`}>
-                        <div className="device-detail__panel-header">
-                            <div>
-                                <p className="device-detail__panel-eyebrow">
-                                    Environment Analysis
-                                </p>
-
-                                <h2 className="device-detail__panel-title">
-                                    Environment Alert
-                                </h2>
-                            </div>
-
-                            <span
-                                className={`device-detail__vpd-status device-detail__vpd-status--${vpdStatus.variant}`}
-                            >
-                                {vpdStatus.label}
-                            </span>
-                        </div>
-
-                        <div className="device-detail__alert">
-                            <h3 className="device-detail__alert-title">
-                                {vpdStatus.title}
-                            </h3>
-
-                            <p className="device-detail__alert-description">
-                                {vpdStatus.description}
-                            </p>
-                        </div>
-                    </article>
-                )}
+                <EnvironmentAlertList telemetry={telemetry} />
 
                 <article className="device-detail__panel device-detail__panel--wide">
                     <div className="device-detail__panel-header">

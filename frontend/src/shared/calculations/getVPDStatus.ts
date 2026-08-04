@@ -1,11 +1,6 @@
-export type VPDStatus = {
-    label: string;
-    variant: string;
-    title?: string;
-    description?: string;
-};
+import type { EnvironmentStatus } from "./status_type";
 
-export function getVPDStatus(vpd: number): VPDStatus {
+export function getVPDStatus(vpd: number): EnvironmentStatus {
     if (vpd < 0.8) {
         return {
             label: "Low",
