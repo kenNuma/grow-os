@@ -13,6 +13,9 @@ import {
 } from "../../telemetry/telemetry.api";
 import type { Telemetry } from "../../telemetry/telemetry.types";
 
+import { calculateVPD } from "../../../shared/calculations/calculateVPD";
+import { getVPDStatus } from "../../../shared/calculations/getVPDStatus";
+
 import {
     CartesianGrid,
     Legend,
@@ -209,6 +212,19 @@ function DeviceDetail() {
             temperature: item.temperature,
             humidity: item.humidity,
         }));
+
+    const vpd =
+        telemetry !== null
+            ? calculateVPD(
+                telemetry.temperature,
+                telemetry.humidity,
+            )
+            : null;
+
+    const vpdStatus =
+        vpd !== null
+            ? getVPDStatus(vpd)
+            : null;
 
     return (
         <section className="device-detail">
@@ -428,6 +444,28 @@ function DeviceDetail() {
 
                         <div className="device-detail__row">
                             <span className="device-detail__label">
+                                VPD
+                            </span>
+
+                            <div className="device-detail__value vpd-value">
+                                {vpd !== null && vpdStatus ? (
+                                    <>
+                                        <span
+                                            className={`device-detail__vpd-status device-detail__vpd-status--${vpdStatus.variant}`}
+                                        >
+                                            {vpdStatus.label}
+                                        </span>
+
+                                        <div>{vpd.toFixed(2)} kPa</div>
+                                    </>
+                                ) : (
+                                    "No data"
+                                )}
+                            </div>
+                        </div>
+
+                        <div className="device-detail__row">
+                            <span className="device-detail__label">
                                 Recorded At
                             </span>
 
@@ -441,6 +479,38 @@ function DeviceDetail() {
                         </div>
                     </div>
                 </article>
+
+                {vpdStatus?.title && (
+                    <article className={`device-detail__panel device-detail__alert-panel device-detail__alert-panel--${vpdStatus.variant}`}>
+                        <div className="device-detail__panel-header">
+                            <div>
+                                <p className="device-detail__panel-eyebrow">
+                                    Environment Analysis
+                                </p>
+
+                                <h2 className="device-detail__panel-title">
+                                    Environment Alert
+                                </h2>
+                            </div>
+
+                            <span
+                                className={`device-detail__vpd-status device-detail__vpd-status--${vpdStatus.variant}`}
+                            >
+                                {vpdStatus.label}
+                            </span>
+                        </div>
+
+                        <div className="device-detail__alert">
+                            <h3 className="device-detail__alert-title">
+                                {vpdStatus.title}
+                            </h3>
+
+                            <p className="device-detail__alert-description">
+                                {vpdStatus.description}
+                            </p>
+                        </div>
+                    </article>
+                )}
 
                 <article className="device-detail__panel device-detail__panel--wide">
                     <div className="device-detail__panel-header">

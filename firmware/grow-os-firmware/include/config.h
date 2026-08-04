@@ -4,7 +4,7 @@
 
 constexpr char DEVICE_KEY[] = "ESP32-001";
 
-constexpr char MQTT_HOST[] = "192.168.11.2";
+constexpr char MQTT_HOST[] = "192.168.11.13";
 constexpr uint16_t MQTT_PORT = 1883;
 constexpr char MQTT_TOPIC[] = "growos/telemetry";
 

@@ -240,6 +240,87 @@
     font-weight: 600;
 }
 
+.vpd-value {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
+.vpd-value {
+    display: inline-flex;
+    align-items: center;
+    padding: 2px 8px;
+    border-radius: 999px;
+}
+
+.device-detail__vpd-status {
+    display: inline-block;
+    margin-top: 4px;
+    padding: 2px 8px;
+    border-radius: 999px;
+    font-size: 12px;
+    font-weight: 600;
+}
+
+.device-detail__vpd-status--low {
+    background: #dbeafe;
+    color: #1d4ed8;
+}
+
+.device-detail__vpd-status--optimal {
+    background: #dcfce7;
+    color: #166534;
+}
+
+.device-detail__vpd-status--high {
+    background: #fef3c7;
+    color: #b45309;
+}
+
+.device-detail__vpd-status--critical {
+    background: #fee2e2;
+    color: #b91c1c;
+}
+
+.device-detail__alert-panel {
+    border-left-width: 4px;
+}
+
+.device-detail__alert-panel--low {
+    border-left-color: #3b82f6;
+}
+
+.device-detail__alert-panel--optimal {
+    border-left-color: #22c55e;
+}
+
+.device-detail__alert-panel--high {
+    border-left-color: #f59e0b;
+}
+
+.device-detail__alert-panel--critical {
+    border-left-color: #ef4444;
+}
+
+.device-detail__alert {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.device-detail__alert-title {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 700;
+}
+
+.device-detail__alert-description {
+    margin: 0;
+    color: #475569;
+    line-height: 1.7;
+}
+
 @media (max-width: 640px) {
     .device-detail__title-row {
         align-items: flex-start;
