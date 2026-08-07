@@ -10,6 +10,11 @@ type UpdateDeviceBody = {
     name: string;
 };
 
+type ControlDeviceBody = {
+    target: string;
+    action: string;
+};
+
 @Controller('devices')
 export class DeviceController {
     constructor(private readonly deviceService: DeviceService) { }
@@ -26,9 +31,29 @@ export class DeviceController {
         return this.deviceService.findByDeviceKey(deviceKey);
     }
 
+    @Get(':deviceKey/control-state')
+    async getControlState(
+        @Param('deviceKey') deviceKey: string,
+    ) {
+        return this.deviceService.getControlState(
+            deviceKey,
+        );
+    }
+
     @Post()
     async create(@Body() body: CreateDeviceBody) {
         return this.deviceService.create(body);
+    }
+
+    @Post(':deviceKey/control')
+    async control(
+        @Param('deviceKey') deviceKey: string,
+        @Body() body: ControlDeviceBody,
+    ) {
+        return this.deviceService.control(
+            deviceKey,
+            body,
+        );
     }
 
     @Patch(':deviceKey')

@@ -17,6 +17,8 @@ import EnvironmentAlertList from "../components/EnvironmentAlertList";
 import { calculateVPD } from "../../../shared/calculations/calculateVPD";
 import { getVPDStatus } from "../../../shared/calculations/getVPDStatus";
 
+import DeviceControlPanel from "../components/DeviceControlPanel";
+
 import {
     CartesianGrid,
     Legend,
@@ -481,6 +483,8 @@ function DeviceDetail() {
                 </article>
 
                 <EnvironmentAlertList telemetry={telemetry} />
+                
+                <DeviceControlPanel deviceKey={device.deviceKey}/>
 
                 <article className="device-detail__panel device-detail__panel--wide">
                     <div className="device-detail__panel-header">

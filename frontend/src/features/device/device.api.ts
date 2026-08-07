@@ -28,3 +28,31 @@ export function deleteDevice(deviceKey: string): Promise<Device> {
         method: "DELETE",
     });
 }
+
+type ControlDeviceData = {
+    target: string;
+    action: string;
+};
+
+export function controlDevice( deviceKey: string, data: ControlDeviceData,): Promise<void> {
+    return apiClient<void>(
+        `/devices/${deviceKey}/control`,
+        {
+            method: "POST",
+            body: data,
+        },
+    );
+}
+
+export type ControlState = {
+    led: boolean;
+};
+
+export function getControlState(deviceKey: string): Promise<ControlState> {
+    return apiClient<ControlState>(
+        `/devices/${deviceKey}/control-state`,
+        {
+            method: 'GET',
+        },
+    );
+}

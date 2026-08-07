@@ -8,17 +8,20 @@ import { ConfigService } from '@nestjs/config';
 import { connect, MqttClient } from 'mqtt';
 
 import { TelemetryService } from '../modules/telemetry/telemetry.service';
+import { ControlStateService } from './control-state.service';
 
 @Injectable()
 export class MqttService implements OnModuleInit, OnModuleDestroy {
     private readonly logger = new Logger(MqttService.name);
-    private readonly topic = 'growos/telemetry';
+    private readonly telemetryTopic = 'growos/telemetry';
+    private readonly deviceStateTopic = 'growos/devices/+/state';
 
     private client: MqttClient | null = null;
 
     constructor(
         private readonly configService: ConfigService,
         private readonly telemetryService: TelemetryService,
+        private readonly controlStateService: ControlStateService,
     ) { }
 
     onModuleInit() {
@@ -31,17 +34,39 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
         this.client.on('connect', () => {
             this.logger.log(`Connected to MQTT broker: ${brokerUrl}`);
 
-            this.client?.subscribe(this.topic, (error) => {
-                if (error) {
-                    this.logger.error(
-                        `Failed to subscribe to topic: ${this.topic}`,
-                        error,
-                    );
-                    return;
-                }
+            this.client?.subscribe(
+                this.telemetryTopic,
+                (error) => {
+                    if (error) {
+                        this.logger.error(
+                            `Failed to subscribe to topic: ${this.telemetryTopic}`,
+                            error,
+                        );
+                        return;
+                    }
 
-                this.logger.log(`Subscribed to topic: ${this.topic}`);
-            });
+                    this.logger.log(
+                        `Subscribed to topic: ${this.telemetryTopic}`,
+                    );
+                },
+            );
+
+            this.client?.subscribe(
+                this.deviceStateTopic,
+                (error) => {
+                    if (error) {
+                        this.logger.error(
+                            `Failed to subscribe to topic: ${this.deviceStateTopic}`,
+                            error,
+                        );
+                        return;
+                    }
+
+                    this.logger.log(
+                        `Subscribed to topic: ${this.deviceStateTopic}`,
+                    );
+                },
+            );
         });
 
         this.client.on('message', async (topic, payload) => {
@@ -52,6 +77,21 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
             this.logger.log(`Payload: ${message}`);
 
             try {
+                if (
+                    topic.startsWith('growos/devices/') &&
+                    topic.endsWith('/state')
+                ) {
+                    const state = JSON.parse(message);
+                    const deviceKey = topic.split('/')[2];
+
+                    if (state.target === 'led') {
+                        this.controlStateService.updateLedState(
+                            deviceKey,
+                            state.state === 'on',
+                        );
+                    }
+                    return;
+                }
                 const telemetry = JSON.parse(message);
 
                 if (
@@ -84,6 +124,38 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
         this.client.on('reconnect', () => {
             this.logger.warn('Reconnecting to MQTT broker...');
         });
+    }
+
+    async publishControl(
+        deviceKey: string,
+        target: string,
+        action: string,
+    ): Promise<void> {
+        if (!this.client || !this.client.connected) {
+            throw new Error('MQTT client is not connected');
+        }
+
+        const topic = `growos/devices/${deviceKey}/control`;
+
+        const payload = JSON.stringify({
+            target,
+            action,
+        });
+
+        await new Promise<void>((resolve, reject) => {
+            this.client?.publish(topic, payload, (error) => {
+                if (error) {
+                    reject(error);
+                    return;
+                }
+
+                resolve();
+            });
+        });
+
+        this.logger.log(`Published MQTT control message`);
+        this.logger.log(`Topic: ${topic}`);
+        this.logger.log(`Payload: ${payload}`);
     }
 
     onModuleDestroy() {
