@@ -90,6 +90,14 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
                             state.state === 'on',
                         );
                     }
+
+                    if (state.target === 'fan') {
+                        this.controlStateService.updateFanState(
+                            deviceKey,
+                            state.state === 'on',
+                        );
+                    }
+                    
                     return;
                 }
                 const telemetry = JSON.parse(message);

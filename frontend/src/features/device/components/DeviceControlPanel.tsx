@@ -11,14 +11,20 @@ function DeviceControlPanel({
     deviceKey,
 }: Props) {
     const [isLedOn, setIsLedOn] = useState(false);
-    const [isLoading, setIsLoading] = useState(false);
+    const [isFanOn, setIsFanOn] = useState(false);
+
+    const [isLedLoading, setIsLedLoading] = useState(false);
+    const [isFanLoading, setIsFanLoading] = useState(false);
+
     const [error, setError] = useState<string | null>(null);
 
     useEffect(() => {
         async function loadControlState() {
             try {
                 const controlState = await getControlState(deviceKey);
+
                 setIsLedOn(controlState.led);
+                setIsFanOn(controlState.fan);
             } catch (error) {
                 console.error(error);
             }
@@ -31,7 +37,7 @@ function DeviceControlPanel({
         const nextAction = isLedOn ? "off" : "on";
 
         try {
-            setIsLoading(true);
+            setIsLedLoading(true);
             setError(null);
 
             await controlDevice(deviceKey, {
@@ -44,7 +50,28 @@ function DeviceControlPanel({
             console.error(error);
             setError("Failed to control LED.");
         } finally {
-            setIsLoading(false);
+            setIsLedLoading(false);
+        }
+    }
+
+    async function toggleFan() {
+        const nextAction = isFanOn ? "off" : "on";
+
+        try {
+            setIsFanLoading(true);
+            setError(null);
+
+            await controlDevice(deviceKey, {
+                target: "fan",
+                action: nextAction,
+            });
+
+            setIsFanOn(nextAction === "on");
+        } catch (error) {
+            console.error(error);
+            setError("Failed to control Fan.");
+        } finally {
+            setIsFanLoading(false);
         }
     }
 
@@ -81,10 +108,11 @@ function DeviceControlPanel({
                             </span>
 
                             <span
-                                className={`device-control__status ${isLedOn
-                                    ? "device-control__status--on"
-                                    : "device-control__status--off"
-                                    }`}
+                                className={`device-control__status ${
+                                    isLedOn
+                                        ? "device-control__status--on"
+                                        : "device-control__status--off"
+                                }`}
                             >
                                 <span className="device-control__status-dot" />
                                 {isLedOn ? "ON" : "OFF"}
@@ -92,17 +120,66 @@ function DeviceControlPanel({
                         </div>
 
                         <button
-                            className={`device-detail__button ${isLedOn
-                                ? "device-detail__button--secondary"
-                                : "device-detail__button--primary"
-                                }`}
+                            className={`device-detail__button ${
+                                isLedOn
+                                    ? "device-detail__button--secondary"
+                                    : "device-detail__button--primary"
+                            }`}
                             type="button"
                             onClick={toggleLed}
-                            disabled={isLoading}
+                            disabled={isLedLoading}
                         >
-                            {isLoading
+                            {isLedLoading
                                 ? "Sending..."
                                 : isLedOn
+                                    ? "Turn OFF"
+                                    : "Turn ON"}
+                        </button>
+                    </div>
+                </div>
+
+                <div className="device-control__row">
+                    <div className="device-control__information">
+                        <h3 className="device-control__name">
+                            Fan
+                        </h3>
+
+                        <p className="device-control__description">
+                            Control the ventilation fan connected to this device.
+                        </p>
+                    </div>
+
+                    <div className="device-control__operation">
+                        <div className="device-control__status-row">
+                            <span className="device-control__status-label">
+                                Status
+                            </span>
+
+                            <span
+                                className={`device-control__status ${
+                                    isFanOn
+                                        ? "device-control__status--on"
+                                        : "device-control__status--off"
+                                }`}
+                            >
+                                <span className="device-control__status-dot" />
+                                {isFanOn ? "ON" : "OFF"}
+                            </span>
+                        </div>
+
+                        <button
+                            className={`device-detail__button ${
+                                isFanOn
+                                    ? "device-detail__button--secondary"
+                                    : "device-detail__button--primary"
+                            }`}
+                            type="button"
+                            onClick={toggleFan}
+                            disabled={isFanLoading}
+                        >
+                            {isFanLoading
+                                ? "Sending..."
+                                : isFanOn
                                     ? "Turn OFF"
                                     : "Turn ON"}
                         </button>

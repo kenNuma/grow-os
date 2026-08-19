@@ -18,6 +18,7 @@ unsigned long lastTelemetrySentAt = 0;
 char controlTopic[100];
 char stateTopic[100];
 const int LED_PIN = 2;
+const int FAN_PIN = 25;
 
 void publishLedState(bool isOn)
 {
@@ -47,6 +48,37 @@ void publishLedState(bool isOn)
   }
 
   Serial.print("LED state published: ");
+  Serial.println(payload);
+}
+
+void publishFanState(bool isOn)
+{
+  if (!mqttClient.connected())
+  {
+    Serial.println("Fan state publish failed: MQTT is not connected");
+    return;
+  }
+
+  char payload[80];
+
+  snprintf(
+      payload,
+      sizeof(payload),
+      "{\"target\":\"fan\",\"state\":\"%s\"}",
+      isOn ? "on" : "off");
+
+  const bool published = mqttClient.publish(
+      stateTopic,
+      payload,
+      true);
+
+  if (!published)
+  {
+    Serial.println("Fan state publish failed");
+    return;
+  }
+
+  Serial.print("Fan state published: ");
   Serial.println(payload);
 }
 
@@ -81,25 +113,58 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length)
   const char *target = document["target"];
   const char *action = document["action"];
 
-  if (strcmp(target, "led") != 0)
+  if (strcmp(target, "led") == 0)
   {
+    if (strcmp(action, "on") == 0)
+    {
+      digitalWrite(LED_PIN, HIGH);
+      Serial.println("LED turned ON");
+      publishLedState(true);
+    }
+    else if (strcmp(action, "off") == 0)
+    {
+      digitalWrite(LED_PIN, LOW);
+      Serial.println("LED turned OFF");
+      publishLedState(false);
+    }
+
     return;
   }
 
-  if (strcmp(action, "on") == 0)
+  if (strcmp(target, "fan") == 0)
   {
-    digitalWrite(LED_PIN, HIGH);
-    Serial.println("LED turned ON");
-    publishLedState(true);
-  }
-  else if (strcmp(action, "off") == 0)
-  {
-    digitalWrite(LED_PIN, LOW);
-    Serial.println("LED turned OFF");
-    publishLedState(false);
+    if (strcmp(action, "on") == 0)
+    {
+      Serial.println("Fan turned ON");
+
+      // Fan ONを疑似的に2回点滅で表現
+      for (int i = 0; i < 2; i++)
+      {
+        digitalWrite(LED_PIN, HIGH);
+        delay(200);
+
+        digitalWrite(LED_PIN, LOW);
+        delay(200);
+      }
+
+      publishFanState(true);
+    }
+    else if (strcmp(action, "off") == 0)
+    {
+      Serial.println("Fan turned OFF");
+
+      // Fan OFFを疑似的に1回点滅で表現
+      digitalWrite(LED_PIN, HIGH);
+      delay(200);
+
+      digitalWrite(LED_PIN, LOW);
+
+      publishFanState(false);
+    }
+
+    return;
   }
 }
-
 void connectWiFi()
 {
   Serial.println();
@@ -199,7 +264,9 @@ void setup()
 {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
+  pinMode(FAN_PIN, OUTPUT);
   digitalWrite(LED_PIN, LOW);
+  digitalWrite(FAN_PIN, LOW);
 
   if (!bme.begin(0x76))
   {

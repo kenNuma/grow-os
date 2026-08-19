@@ -46,6 +46,7 @@ export function controlDevice( deviceKey: string, data: ControlDeviceData,): Pro
 
 export type ControlState = {
     led: boolean;
+    fan: boolean;
 };
 
 export function getControlState(deviceKey: string): Promise<ControlState> {
