@@ -1,12 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../../infrastructure/database/prisma.service';
+import type { CreateTelemetryData } from './telemetry.types';
 
-type CreateTelemetryData = {
-    deviceKey: string;
-    temperature: number;
-    humidity: number;
-    pressure: number;
-};
 
 @Injectable()
 export class TelemetryRepository {
@@ -30,6 +25,7 @@ export class TelemetryRepository {
                     temperature: data.temperature,
                     humidity: data.humidity,
                     pressure: data.pressure,
+                    waterTemperature: data.waterTemperature,
                 },
             });
 

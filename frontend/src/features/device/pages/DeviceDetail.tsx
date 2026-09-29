@@ -214,6 +214,7 @@ function DeviceDetail() {
             }),
             temperature: item.temperature,
             humidity: item.humidity,
+            waterTemperature: item.waterTemperature,
         }));
 
     const vpd =
@@ -446,6 +447,18 @@ function DeviceDetail() {
 
                         <div className="device-detail__row">
                             <span className="device-detail__label">
+                                Water Temperature
+                            </span>
+
+                            <span className="device-detail__value">
+                                {telemetry?.waterTemperature != null
+                                    ? `${telemetry.waterTemperature.toFixed(1)} °C`
+                                    : "No data"}
+                            </span>
+                        </div>
+
+                        <div className="device-detail__row">
+                            <span className="device-detail__label">
                                 VPD
                             </span>
 
@@ -483,8 +496,8 @@ function DeviceDetail() {
                 </article>
 
                 <EnvironmentAlertList telemetry={telemetry} />
-                
-                <DeviceControlPanel deviceKey={device.deviceKey}/>
+
+                <DeviceControlPanel deviceKey={device.deviceKey} />
 
                 <article className="device-detail__panel device-detail__panel--wide">
                     <div className="device-detail__panel-header">
@@ -548,7 +561,7 @@ function DeviceDetail() {
                                     <Tooltip
                                         formatter={(value, name) => {
                                             if (
-                                                name === "Temperature"
+                                                name === "Temperature" || name === "Water Temperature"
                                             ) {
                                                 return [
                                                     `${value} °C`,
@@ -569,8 +582,19 @@ function DeviceDetail() {
                                         yAxisId="temperature"
                                         type="monotone"
                                         dataKey="temperature"
-                                        name="Temperature"
+                                        name="気温"
                                         stroke="#f97316"
+                                        strokeWidth={2}
+                                        dot={{ r: 3 }}
+                                        activeDot={{ r: 5 }}
+                                    />
+
+                                    <Line
+                                        yAxisId="temperature"
+                                        type="monotone"
+                                        dataKey="waterTemperature"
+                                        name="水温"
+                                        stroke="#0ea5e9"
                                         strokeWidth={2}
                                         dot={{ r: 3 }}
                                         activeDot={{ r: 5 }}
@@ -580,8 +604,8 @@ function DeviceDetail() {
                                         yAxisId="humidity"
                                         type="monotone"
                                         dataKey="humidity"
-                                        name="Humidity"
-                                        stroke="#0ea5e9"
+                                        name="湿度"
+                                        stroke="#22c55e"
                                         strokeWidth={2}
                                         dot={{ r: 3 }}
                                         activeDot={{ r: 5 }}

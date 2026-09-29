@@ -9,6 +9,9 @@
 #include <Wire.h>
 #include <Adafruit_BME280.h>
 
+#include <OneWire.h>
+#include <DallasTemperature.h>
+
 WiFiClient wifiClient;
 PubSubClient mqttClient(wifiClient);
 Adafruit_BME280 bme;
@@ -19,6 +22,20 @@ char controlTopic[100];
 char stateTopic[100];
 const int LED_PIN = 2;
 const int FAN_PIN = 25;
+const int WATER_TEMP_PIN = 27;
+
+OneWire oneWire(WATER_TEMP_PIN);
+DallasTemperature waterTemperatureSensor(&oneWire);
+DeviceAddress waterTemperatureAddress = {
+    0x28,
+    0x22,
+    0x33,
+    0x5B,
+    0x00,
+    0x00,
+    0x00,
+    0x40
+  };
 
 void publishLedState(bool isOn)
 {
@@ -165,6 +182,7 @@ void handleMqttMessage(char *topic, byte *payload, unsigned int length)
     return;
   }
 }
+
 void connectWiFi()
 {
   Serial.println();
@@ -216,16 +234,64 @@ void connectMqtt()
   }
 }
 
+float readWaterTemperatureDirect()
+{
+  byte scratchpad[9];
+
+  if (!oneWire.reset())
+  {
+    Serial.println("DS18B20: No presence before conversion");
+    return NAN;
+  }
+
+  oneWire.select(waterTemperatureAddress);
+  oneWire.write(0x44, 1);
+
+  // 12bit変換待ち
+  delay(800);
+
+  if (!oneWire.reset())
+  {
+    Serial.println("DS18B20: No presence before reading");
+    return NAN;
+  }
+
+  oneWire.select(waterTemperatureAddress);
+  oneWire.write(0xBE);
+
+  for (int i = 0; i < 9; i++)
+  {
+    scratchpad[i] = oneWire.read();
+  }
+
+  const byte calculatedCrc =
+      OneWire::crc8(scratchpad, 8);
+
+  if (calculatedCrc != scratchpad[8])
+  {
+    Serial.println("DS18B20: Scratchpad CRC failed");
+    return NAN;
+  }
+
+  const int16_t rawTemperature =
+      (scratchpad[1] << 8) | scratchpad[0];
+
+  return static_cast<float>(rawTemperature) / 16.0F;
+}
+
+
 void publishTelemetry()
 {
   const float temperature = bme.readTemperature();
   const float humidity = bme.readHumidity();
   const float pressure = bme.readPressure() / 100.0F;
+  const float waterTemperature = readWaterTemperatureDirect();
 
   if (
       isnan(temperature) ||
       isnan(humidity) ||
       isnan(pressure) ||
+      isnan(waterTemperature) ||
       temperature < -40.0 ||
       temperature > 85.0 ||
       humidity < 0.0 ||
@@ -237,16 +303,18 @@ void publishTelemetry()
     return;
   }
 
-  char payload[160];
+  char payload[200];
 
   snprintf(
       payload,
       sizeof(payload),
-      "{\"deviceKey\":\"%s\",\"temperature\":%.1f,\"humidity\":%.1f,\"pressure\":%.1f}",
+      "{\"deviceKey\":\"%s\",\"temperature\":%.1f,\"humidity\":%.1f,\"pressure\":%.1f,\"waterTemperature\":%.1f}",
       DEVICE_KEY,
       temperature,
       humidity,
-      pressure);
+      pressure,
+      waterTemperature
+    );
 
   const bool published = mqttClient.publish(MQTT_TOPIC, payload);
 
@@ -260,11 +328,141 @@ void publishTelemetry()
   Serial.println("Telemetry publish failed");
 }
 
+void scanOneWire()
+{
+  byte address[8];
+
+  Serial.println();
+  Serial.println("Scanning OneWire bus...");
+
+  oneWire.reset_search();
+
+  if (!oneWire.search(address))
+  {
+    Serial.println("No OneWire device found");
+    oneWire.reset_search();
+    return;
+  }
+
+  Serial.print("ROM address: ");
+
+  for (int i = 0; i < 8; i++)
+  {
+    if (address[i] < 16)
+    {
+      Serial.print("0");
+    }
+
+    Serial.print(address[i], HEX);
+
+    if (i < 7)
+    {
+      Serial.print(":");
+    }
+  }
+
+  Serial.println();
+
+  Serial.print("Family code: 0x");
+
+  if (address[0] < 16)
+  {
+    Serial.print("0");
+  }
+
+  Serial.println(address[0], HEX);
+
+  const byte calculatedCrc = OneWire::crc8(address, 7);
+
+  Serial.print("ROM CRC: 0x");
+  Serial.println(address[7], HEX);
+
+  Serial.print("Calculated CRC: 0x");
+  Serial.println(calculatedCrc, HEX);
+
+  if (calculatedCrc == address[7])
+  {
+    Serial.println("CRC: OK");
+  }
+  else
+  {
+    Serial.println("CRC: FAILED");
+  }
+
+  oneWire.reset_search();
+
+  Serial.println("OneWire scan finished");
+  Serial.println();
+}
+
+void debugWaterTemperature()
+{
+  byte scratchpad[9];
+
+  // 温度変換開始
+  oneWire.reset();
+  oneWire.select(waterTemperatureAddress);
+  oneWire.write(0x44, 1);
+
+  // 12bit変換完了待ち
+  delay(800);
+
+  // Scratchpad読み出し
+  if (!oneWire.reset())
+  {
+    Serial.println("DS18B20 DEBUG: No presence pulse");
+    return;
+  }
+
+  oneWire.select(waterTemperatureAddress);
+  oneWire.write(0xBE);
+
+  for (int i = 0; i < 9; i++)
+  {
+    scratchpad[i] = oneWire.read();
+  }
+
+  const byte calculatedCrc =
+      OneWire::crc8(scratchpad, 8);
+
+  if (calculatedCrc != scratchpad[8])
+  {
+    Serial.print("DS18B20 DEBUG: Scratchpad CRC FAILED | received=");
+    Serial.print(scratchpad[8], HEX);
+
+    Serial.print(" calculated=");
+    Serial.println(calculatedCrc, HEX);
+
+    return;
+  }
+
+  Serial.println("DS18B20 DEBUG: Scratchpad CRC OK");
+}
+
+
 void setup()
 {
   Serial.begin(115200);
   pinMode(LED_PIN, OUTPUT);
   pinMode(FAN_PIN, OUTPUT);
+
+  waterTemperatureSensor.begin();
+  waterTemperatureSensor.setWaitForConversion(true);
+  waterTemperatureSensor.setResolution(waterTemperatureAddress, 12);
+
+  if (waterTemperatureSensor.isConnected(waterTemperatureAddress))
+  {
+    Serial.println("DS18B20 address connection: OK");
+  }
+  else
+  {
+    Serial.println("DS18B20 address connection: FAILED");
+  }
+  scanOneWire();
+
+  Serial.print("DS18B20 sensors found: ");
+  Serial.println(waterTemperatureSensor.getDeviceCount());
+
   digitalWrite(LED_PIN, LOW);
   digitalWrite(FAN_PIN, LOW);
 
@@ -327,4 +525,5 @@ void loop()
     lastTelemetrySentAt = currentTime;
     publishTelemetry();
   }
+
 }

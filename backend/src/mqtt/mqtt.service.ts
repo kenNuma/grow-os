@@ -106,7 +106,8 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
                     typeof telemetry.deviceKey !== 'string' ||
                     telemetry.deviceKey.trim() === '' ||
                     typeof telemetry.temperature !== 'number' ||
-                    typeof telemetry.humidity !== 'number'
+                    typeof telemetry.humidity !== 'number' ||
+                    typeof telemetry.waterTemperature !== 'number'
                 ) {
                     this.logger.warn('Invalid telemetry payload');
                     return;
@@ -117,6 +118,7 @@ export class MqttService implements OnModuleInit, OnModuleDestroy {
                     temperature: telemetry.temperature,
                     humidity: telemetry.humidity,
                     pressure: telemetry.pressure,
+                    waterTemperature: telemetry.waterTemperature,
                 });
 
                 this.logger.log('Telemetry saved');

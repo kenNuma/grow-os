@@ -1,12 +1,6 @@
 import { Body, Controller, Query, Post, Get, Param } from '@nestjs/common';
 import { TelemetryService } from './telemetry.service';
-
-type CreateTelemetryBody = {
-    deviceKey: string;
-    temperature: number;
-    humidity: number;
-    pressure: number;
-};
+import  type { CreateTelemetryData } from './telemetry.types';
 
 @Controller('telemetry')
 export class TelemetryController {
@@ -15,7 +9,7 @@ export class TelemetryController {
     ) { }
 
     @Post()
-    async create(@Body() body: CreateTelemetryBody) {
+    async create(@Body() body: CreateTelemetryData) {
         return this.telemetryService.create(body);
     }
 

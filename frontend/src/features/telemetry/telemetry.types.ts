@@ -4,5 +4,6 @@ export interface Telemetry {
     temperature: number;
     humidity: number;
     pressure: number | null;
+    waterTemperature: number | null;
     recordedAt: string;
 }

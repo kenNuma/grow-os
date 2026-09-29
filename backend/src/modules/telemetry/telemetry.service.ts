@@ -1,12 +1,6 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { TelemetryRepository } from './telemetry.repository';
-
-type CreateTelemetryData = {
-    deviceKey: string;
-    temperature: number;
-    humidity: number;
-    pressure: number;
-};
+import type { CreateTelemetryData } from './telemetry.types';
 
 @Injectable()
 export class TelemetryService {
